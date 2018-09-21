@@ -1,10 +1,15 @@
 const AWS = require('aws-sdk');
 const S3 = new AWS.S3();
 var dynamo = new AWS.DynamoDB.DocumentClient();
-const rp = require('request-promise');
+//const rp = require('request-promise');
 
 const LINE = require('@line/bot-sdk');
 const channelAccessToken = process.env["channelAccessToken"];
+
+// functions
+const { putDynamo } = require('./functions/put-dynamo.js');
+const { getDynamo } = require('./functions/get-dynamo.js');
+const { updateDynamo } = require('./functions/update-dynamo.js');
 
 exports.handler = async function(event, context, callback) {
   const LINE_CLIENT = new LINE.Client({channelAccessToken: channelAccessToken});
@@ -25,11 +30,48 @@ exports.handler = async function(event, context, callback) {
 
         // メッセージの内容
         var requestMsg = event.events[0].message.text;
-        if(requestMsg === "1"){
-        } else if(requestMsg === "2"){
-        } else if(requestMsg === "3"){
-        }else{
-          // リッチメニューから以外のアクセス
+        const userId = event.events[0].source.userId;
+
+        var dynamoData = await getDynamo(userId);
+        console.log(dynamoData);
+
+        // 会話入力の開始
+        if(requestMsg === "start"){
+          const putData = {
+            require: true,
+            count: 0,
+          }
+          putDynamo(userId, putData);
+          replyMessage.push({ 'type': 'text', 'text': "Clovaに喋らせたい最初の会話を入力してください" });
+        } 
+
+        // TODO 終了する
+        else if(requestMsg === "finish"){
+          const putData = {
+            require: false,
+            count: 0,
+          }
+          putDynamo(userId, putData);
+          replyMessage.push({ 'type': 'text', 'text': "会話をリセットしました。" });
+        }
+
+        // 入力モードで発話を入力された時
+        else{
+          // startしてない場合は終了
+          if(dynamoData.Item.data.require === false){
+            replyMessage.push({ 'type': 'text', 'text': "リッチメニューよりstartしてください。" });
+          }
+          // startしている場合、dynamoに入れていく
+          else{
+            // メッセージを保存
+            const next = dynamoData.Item.data.count + 1;
+            var putData = dynamoData.Item.data;
+            putData[String(next)] = requestMsg;
+            putData.count = next;
+            putDynamo(userId, putData);
+
+            replyMessage.push({ 'type': 'text', 'text': `${next}回目の発話は、「${requestMsg}」です` });
+          }
         }
 
       } else {
