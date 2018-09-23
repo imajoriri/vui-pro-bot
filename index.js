@@ -40,6 +40,7 @@ exports.handler = async function(event, context, callback) {
           const putData = {
             require: true,
             count: 0,
+            speech: [],
           }
           putDynamo(userId, putData);
           replyMessage.push({ 'type': 'text', 'text': "Clovaに喋らせたい最初の会話を入力してください" });
@@ -50,6 +51,7 @@ exports.handler = async function(event, context, callback) {
           const putData = {
             require: false,
             count: 0,
+            speech: [],
           }
           putDynamo(userId, putData);
           replyMessage.push({ 'type': 'text', 'text': "会話をリセットしました。" });
@@ -66,7 +68,8 @@ exports.handler = async function(event, context, callback) {
             // メッセージを保存
             const next = dynamoData.Item.data.count + 1;
             var putData = dynamoData.Item.data;
-            putData[String(next)] = requestMsg;
+            putData.speech.push(requestMsg);
+            //putData[String(next)] = requestMsg;
             putData.count = next;
             putDynamo(userId, putData);
 
