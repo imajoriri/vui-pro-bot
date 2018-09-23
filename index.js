@@ -43,15 +43,15 @@ exports.handler = async function(event, context, callback) {
             speech: [],
           }
           putDynamo(userId, putData);
-          replyMessage.push({ 'type': 'text', 'text': "Clovaに喋らせたい最初の会話を入力してください" });
+          replyMessage.push({ 'type': 'text', 'text': "スキル起動時にClovaに喋らせたい最初の会話を入力してください" });
         } 
 
         // TODO 終了する
         else if(requestMsg === "finish"){
           const putData = {
-            require: false,
-            count: 0,
-            speech: [],
+            //require: false,
+            //count: 0,
+            //speech: [],
           }
           putDynamo(userId, putData);
           replyMessage.push({ 'type': 'text', 'text': "会話をリセットしました。" });
@@ -73,7 +73,7 @@ exports.handler = async function(event, context, callback) {
             putData.count = next;
             putDynamo(userId, putData);
 
-            replyMessage.push({ 'type': 'text', 'text': `${next}回目の発話は、「${requestMsg}」です` });
+            replyMessage.push({ 'type': 'text', 'text': `${next}回目の発話は、「${requestMsg}」です。${next + 1}回目に発話させたい内容があれば入力してください。` });
           }
         }
 
